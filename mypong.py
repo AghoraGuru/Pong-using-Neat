@@ -6,49 +6,49 @@ import pickle
 
 
 class PongGame:
-    def __init__(self, window, width, height):
+    def __init__(self, window, width, height):                   #initializing the training Part
         self.game = Game(window, width, height)
         self.left_paddle = self.game.left_paddle
         self.right_paddle = self.game.right_paddle
         self.ball = self.game.ball
 
-    def test_ai(self, genome, config):
+    def test_ai(self, genome, config):                          #initializing the Test Part
         net = neat.nn.FeedForwardNetwork(genome,config)
 
         run = True
-        clock = pygame.time.Clock()
+        clock = pygame.time.Clock()                             #pygame's clock functionality
         while run:
-            clock.tick(60)
+            clock.tick(60)                                      #limits the speed of th epong ball, it goes crazy without it :smile:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     run = False
-                    break
+                    break                                       #if we click the close mark it quits the game 
 
-            keys = pygame.key.get_pressed()
-            if keys[pygame.K_w]:
-                self.game.move_paddle(left=True, up=True)
+            keys = pygame.key.get_pressed()                     #reading the keypress
+            if keys[pygame.K_w]:                                
+                self.game.move_paddle(left=True, up=True)       #if W is pressed left paddle moves up
             if keys[pygame.K_s]:
-                self.game.move_paddle(left=True, up=False)
+                self.game.move_paddle(left=True, up=False)      #if S is pressed left paddle moves down
             
-            output2 = net.activate(
-                (self.right_paddle.y, self.ball.y, abs(self.right_paddle.x - self.ball.x)))
-            decision2 = output2.index(max(output2))
+            output2 = net.activate(                             
+                (self.right_paddle.y, self.ball.y, abs(self.right_paddle.x - self.ball.x))) #determines the y point of paddle, distance of paddle from pong gives Absolute distance
+            decision2 = output2.index(max(output2))             #gives maximum point of output2
 
-            if decision2 == 0:
+            if decision2 == 0:                                  #stays still if pong is straight
                 pass
-            elif decision2 == 1:
-                self.game.move_paddle(left=False, up=True)
+            elif decision2 == 1:                                
+                self.game.move_paddle(left=False, up=True)      #Right paddle moves up if output is 1
             else:
-                self.game.move_paddle(left=False, up=False)
+                self.game.move_paddle(left=False, up=False)        #else you know, moves down
     
-            game_info = self.game.loop()
+            game_info = self.game.loop()                            #testing continues
             self.game.draw(True, False)
-            pygame.display.update()
+            pygame.display.update()                                 #updates points
 
         pygame.quit()
 
     def train_ai(self, genome1, genome2, config):
-        net1 = neat.nn.FeedForwardNetwork.create(genome1, config)
+        net1 = neat.nn.FeedForwardNetwork.create(genome1, config)   #initalizing NEAT 
         net2 = neat.nn.FeedForwardNetwork.create(genome2, config)
 
         run = True
@@ -56,8 +56,8 @@ class PongGame:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     quit()
-
-            output1 = net1.activate(
+            #right side paddle learning
+            output1 = net1.activate(                               ##determines the y point of paddle, distance of paddle from pong gives Absolute distance
                 (self.left_paddle.y, self.ball.y, abs(self.left_paddle.x - self.ball.x)))
             decision1 = output1.index(max(output1))
 
@@ -67,7 +67,7 @@ class PongGame:
                 self.game.move_paddle(left=True, up=True)
             else:
                 self.game.move_paddle(left=True, up=False)
-
+            #left side paddle learning
             output2 = net2.activate(
                 (self.right_paddle.y, self.ball.y, abs(self.right_paddle.x - self.ball.x)))
             decision2 = output2.index(max(output2))
@@ -84,8 +84,8 @@ class PongGame:
             self.game.draw(draw_score=False, draw_hits=True)
             pygame.display.update()
 
-            if game_info.left_score >= 1 or game_info.right_score >= 1 or game_info.left_hits > 50:
-                self.calculate_fitness(genome1, genome2, game_info)
+            if game_info.left_score >= 1 or game_info.right_score >= 1 or game_info.left_hits > 50: #if any ones score is greater than the other OR left hits 50 learning stops
+                self.calculate_fitness(genome1, genome2, game_info)                                 #and it calculates the fitness of the net which helped to score well
                 break
 
     def calculate_fitness(self, genome1, genome2, game_info):
@@ -131,7 +131,7 @@ def test_ai(config):
 
 if __name__ == "__main__":
     local_dir = os.path.dirname(__file__)
-    config_path = os.path.join(local_dir, "config.txt")
+    config_path = os.path.join(local_dir, "config.txt")                 #uses the config.txt
 
     config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
                          neat.DefaultSpeciesSet, neat.DefaultStagnation,
